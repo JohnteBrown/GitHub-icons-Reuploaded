@@ -1,0 +1,33 @@
+{
+  "name": "github-icons",
+  "version": "0.0.1",
+  "private": true,
+  "description": "VS Code icons for popular code-hosting websites",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "clean": "jake clean",
+    "build": "jake build",
+    "lint": "jake lint",
+    "lint:fix": "jake lintFix",
+    "verify": "jake verify",
+    "start": "jake"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.16.22",
+    "jake": "^13.0.3",
+    "oxlint": "^1.89.0"
+  },
+  "dependencies": {
+    "fastdom": "^1.0.11",
+    "github-url-detection": "^2.2.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "select-dom": "^7.1.1",
+    "selector-observer": "^2.1.6",
+    "selector-set": "^1.1.5",
+    "vscode-icons-ts": "^0.1.2"
+  }
+}

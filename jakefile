@@ -1,0 +1,87 @@
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const { desc, task } = require('jake');
+
+const root = __dirname;
+const dist = path.join(root, 'dist');
+
+function runNode(script, args) {
+  const result = spawnSync(process.execPath, [script, ...args], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  if (result.status !== 0) {
+    throw new Error(`Command failed: ${script}`);
+  }
+}
+
+desc('Remove generated output');
+task('clean', () => {
+  fs.rmSync(dist, { recursive: true, force: true });
+  for (const file of [
+    'background.js',
+    'background.js.map',
+    'content.js',
+    'content.js.map',
+    'popup.js',
+    'popup.js.map',
+  ]) {
+    fs.rmSync(path.join(root, file), { force: true });
+  }
+});
+
+desc('Lint project source');
+task('lint', () => {
+  runNode(path.join(root, 'node_modules', 'oxlint', 'bin', 'oxlint'), ['src', 'scripts', 'jakefile']);
+});
+
+desc('Lint and apply safe fixes');
+task('lintFix', () => {
+  runNode(path.join(root, 'node_modules', 'oxlint', 'bin', 'oxlint'), ['--fix', 'src', 'scripts', 'jakefile']);
+});
+
+desc('Build the browser extension');
+task('build', ['clean'], () => {
+  runNode(path.join(root, 'scripts', 'build.cjs'), []);
+
+  for (const item of [
+    'manifest.json',
+    'popup.html',
+    'popup.css',
+    'content.css',
+    'spectre.min.css',
+    'icon16.png',
+    'icon48.png',
+    'icon128.png',
+  ]) {
+    fs.copyFileSync(path.join(root, item), path.join(dist, item));
+  }
+
+  for (const directory of ['icons', 'favicons', 'images']) {
+    fs.cpSync(path.join(root, directory), path.join(dist, directory), { recursive: true });
+  }
+});
+
+desc('Verify lint and build output');
+task('verify', ['lint', 'build'], () => {
+  for (const file of [
+    'manifest.json',
+    'popup.html',
+    'background.js',
+    'content.js',
+    'popup.js',
+  ]) {
+    const filePath = path.join(dist, file);
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+      throw new Error(`Missing or empty build artifact: dist/${file}`);
+    }
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(dist, 'manifest.json'), 'utf8'));
+  if (manifest.manifest_version !== 3) {
+    throw new Error('Manifest is not MV3');
+  }
+});
+
+task('default', ['verify']);

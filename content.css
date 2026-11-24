@@ -1,0 +1,144 @@
+/**
+ * Github
+ */
+
+td.icon {
+    min-width: 26px; /* make sure that icon will not blink after replacing old one */
+}
+
+td.icon > .octicon {
+    display: none; /* don't show old icon */
+    width: 16px;
+}
+td.icon > .spinner {
+    display: block !important; /* show loading icon while replacing old one */
+}
+
+td.icon > img  {
+    /* copied from original icon */
+    position: relative;
+    top: 3px;
+    margin-top: -3px;
+    margin-left: -2px;
+}
+
+.js-path-segment > a > img {
+    vertical-align: middle;
+}
+
+.js-path-segment:before {
+    /* min-width: 16px;
+    display: inline-block;
+    content: "\00a0 "; */
+}
+
+.final-path > img {
+    vertical-align: middle;
+}
+
+/* diff icons - WIP */
+
+.vsi-icon-diff {
+    vertical-align: middle;
+}
+
+.vscode-icon {
+    vertical-align: -3px;
+    height: 16px;
+    user-select: none;
+    object-fit: cover;
+}
+
+/**
+ * BitBucket
+ */
+.bb-icon {
+    height: 24px !important;
+    vertical-align: text-top;
+}
+/*
+
+.aui-iconfont-devtools-folder-closed:before {
+    width: 16px;
+    height: 16px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 16px 16px;
+}
+
+.aui-iconfont-devtools-submodule:before {
+    width: 16px;
+    height: 16px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 16px 16px;
+}
+
+.aui-iconfont-devtools-file:before {
+    width: 16px;
+    height: 16px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 16px 16px;
+}
+
+.aui-iconfont-devtools-folder-closed:before {
+    content: "" !important;
+}
+
+.aui-iconfont-devtools-submodule:before {
+    content: "" !important;
+}
+
+.aui-iconfont-devtools-file:before {
+    content: "" !important;
+} */
+
+/**
+ * GitLab
+ */
+.tree-item > td > .fa.fa-folder.fa-fw {
+    width: 18px;
+    height: 14px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 18px 14px;
+}
+
+.tree-item > td > .fa.fa-file-text-o.fa-fw {
+    width: 18px;
+    height: 14px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 18px 14px;
+}
+
+.tree-item > td > .fa.fa-file-folder-o.fa-fw {
+    width: 18px;
+    height: 14px;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/animation.gif');
+    background-size: 18px 14px;
+}
+
+.tree-item > td > .fa.fa-folder.fa-fw::before {
+    content: "";
+}
+
+.tree-item > td > .fa.fa-file-text-o.fa-fw::before {
+    content: "";
+}
+
+.tree-item > td > .fa.fa-file-folder-o.fa-fw::before {
+    content: "";
+}
+
+/**
+ * Pastebin
+ */
+.vsi-pb {
+    margin: 10px 7px 0 -5px
+}
+
+/**
+ * Source Forge
+ */
+.vscode-icon.sf-icon {
+    margin-right: 0.5rem;
+    width:  20px;
+    height: 20px;
+}
