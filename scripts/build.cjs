@@ -52,6 +52,15 @@ function transformModule(file) {
         tsx: path.extname(file) === '.tsx',
       },
       target: 'es2022',
+      transform: {
+        optimizer: {
+          globals: {
+            vars: {
+              'process.env.NODE_ENV': '"production"',
+            },
+          },
+        },
+      },
     },
     module: {
       type: 'commonjs',
@@ -106,7 +115,7 @@ for (const [name, entry] of Object.entries(entries)) {
   }
 
   const bundle = `(function(modules,entry){`
-    + `var cache={},process={env:{NODE_ENV:'production'}};`
+    + `var cache={};`
     + `function load(id){if(cache[id])return cache[id].exports;`
     + `var record=modules[id],module={exports:{}};cache[id]=module;`
     + `var deps=record[1];`
