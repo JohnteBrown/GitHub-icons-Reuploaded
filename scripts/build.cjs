@@ -1,17 +1,18 @@
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 const swc = require('@swc/core');
 
 const root = path.resolve(__dirname, '..');
-const dist = path.join(root, 'dist');
+const swcConfig = JSON.parse(fs.readFileSync(path.join(root, '.swcrc'), 'utf8'));
+delete swcConfig.$schema;
+
 const entries = {
   background: path.join(root, 'src/packages/background/Background.ts'),
   content: path.join(root, 'src/packages/content/Content.ts'),
   popup: path.join(root, 'src/packages/popup/Popup.tsx'),
 };
-
-const modules = new Map();
-const moduleIds = new Map();
 
 function resolveModule(specifier, importer) {
   if (specifier.startsWith('.')) {
@@ -33,97 +34,97 @@ function resolveModule(specifier, importer) {
 
   try {
     return require.resolve(specifier, { paths: [path.dirname(importer)] });
-  } catch {
-    throw new Error(`Cannot resolve "${specifier}" from ${importer}`);
+  } catch (error) {
+    throw new Error(`Cannot resolve "${specifier}" from ${importer}`, { cause: error });
   }
 }
 
-function transformModule(file) {
+async function transformModule(file, preprocessSource) {
   if (file.endsWith('.json')) {
     return `module.exports = ${JSON.stringify(JSON.parse(fs.readFileSync(file, 'utf8')))};`;
   }
 
-  const result = swc.transformFileSync(file, {
-    jsc: {
-      parser: {
-        syntax: path.extname(file) === '.tsx' || path.extname(file) === '.ts'
-          ? 'typescript'
-          : 'ecmascript',
-        tsx: path.extname(file) === '.tsx',
-      },
-      target: 'es2022',
-      transform: {
-        optimizer: {
-          globals: {
-            vars: {
-              'process.env.NODE_ENV': '"production"',
-            },
-          },
-        },
-      },
-    },
-    module: {
-      type: 'commonjs',
-    },
-    minify: true,
-  });
+  let source = fs.readFileSync(file, 'utf8');
+  if (preprocessSource && path.relative(path.join(root, 'src'), file).split(path.sep)[0] !== '..') {
+    source = await preprocessSource(source, file);
+  }
 
+  const extension = path.extname(file);
+  const options = structuredClone(swcConfig);
+  options.jsc.parser = {
+    ...options.jsc.parser,
+    syntax: extension === '.ts' || extension === '.tsx' ? 'typescript' : 'ecmascript',
+    tsx: extension === '.tsx',
+  };
+  options.filename = file;
+
+  const result = await swc.transform(source, options);
   return result.code;
 }
 
-function registerModule(file) {
+async function registerModule(file, state, preprocessSource) {
   const absoluteFile = path.resolve(file);
-  if (moduleIds.has(absoluteFile)) {
-    return moduleIds.get(absoluteFile);
+  if (state.moduleIds.has(absoluteFile)) {
+    return state.moduleIds.get(absoluteFile);
   }
 
-  const id = modules.size + 1;
-  moduleIds.set(absoluteFile, id);
-  modules.set(id, { file: absoluteFile, code: null, dependencies: new Map() });
+  const id = state.modules.size + 1;
+  state.moduleIds.set(absoluteFile, id);
+  state.modules.set(id, { code: null, dependencies: new Map() });
 
-  const code = transformModule(absoluteFile);
+  const code = await transformModule(absoluteFile, preprocessSource);
   const dependencies = new Map();
   for (const match of code.matchAll(/require\((["'])([^"']+)\1\)/g)) {
     const specifier = match[2];
     if (!dependencies.has(specifier)) {
-      dependencies.set(specifier, registerModule(resolveModule(specifier, absoluteFile)));
+      const dependencyPath = resolveModule(specifier, absoluteFile);
+      dependencies.set(
+        specifier,
+        await registerModule(dependencyPath, state, preprocessSource),
+      );
     }
   }
 
-  modules.get(id).code = code;
-  modules.get(id).dependencies = dependencies;
+  state.modules.set(id, { code, dependencies });
   return id;
 }
 
-function escapeString(value) {
-  return JSON.stringify(value);
-}
-
-fs.mkdirSync(dist, { recursive: true });
-
-for (const [name, entry] of Object.entries(entries)) {
-  const entryId = registerModule(entry);
+function createBundle(modules, entryId) {
   const moduleCode = [];
-
   for (const [id, module] of modules) {
-    const deps = Object.fromEntries(
-      [...module.dependencies].map(([specifier, dependencyId]) => [specifier, dependencyId]),
-    );
+    const dependencies = Object.fromEntries(module.dependencies);
     moduleCode.push(
-      `${id}: [function(module,exports,require,__dirname,__filename){${module.code}},${escapeString(deps)}]`,
+      `${id}: [function(module,exports,require,__dirname,__filename){${module.code}},${JSON.stringify(dependencies)}]`,
     );
   }
 
-  const bundle = `(function(modules,entry){`
-    + `var cache={};`
+  return `(function(modules,entry){`
+    + `var cache={},process={env:{NODE_ENV:'production'}};`
     + `function load(id){if(cache[id])return cache[id].exports;`
     + `var record=modules[id],module={exports:{}};cache[id]=module;`
     + `var deps=record[1];`
     + `function localRequire(name){return load(deps[name])}`
-    + `record[0](module,module.exports,localRequire,'',record[2]||'');`
+    + `record[0](module,module.exports,localRequire,'','');`
     + `return module.exports}`
     + `load(entry);`
     + `})({${moduleCode.join(',')}},${entryId});\n`;
-
-  fs.writeFileSync(path.join(dist, `${name}.js`), bundle, 'utf8');
 }
+
+async function buildBundles(outputDirectory, preprocessSource) {
+  fs.mkdirSync(outputDirectory, { recursive: true });
+
+  for (const [name, entry] of Object.entries(entries)) {
+    const state = {
+      modules: new Map(),
+      moduleIds: new Map(),
+    };
+    const entryId = await registerModule(entry, state, preprocessSource);
+    fs.writeFileSync(
+      path.join(outputDirectory, `${name}.js`),
+      createBundle(state.modules, entryId),
+      'utf8',
+    );
+  }
+}
+
+module.exports = { buildBundles };
