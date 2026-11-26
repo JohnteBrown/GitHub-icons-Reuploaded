@@ -8,7 +8,16 @@
     },
     "target": "es2022",
     "loose": false,
-    "externalHelpers": false
+    "externalHelpers": false,
+    "transform": {
+      "optimizer": {
+        "globals": {
+          "vars": {
+            "process.env.NODE_ENV": "\"production\""
+          }
+        }
+      }
+    }
   },
   "module": {
     "type": "commonjs"
