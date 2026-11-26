@@ -94,7 +94,7 @@ function createBundle(modules, entryId) {
   for (const [id, module] of modules) {
     const dependencies = Object.fromEntries(module.dependencies);
     moduleCode.push(
-      `${id}: [function(module,exports,require,__dirname,__filename){${module.code}},${JSON.stringify(dependencies)}]`,
+      `${id}: [function(module,exports,require,__dirname,__filename,process){${module.code}},${JSON.stringify(dependencies)}]`,
     );
   }
 
@@ -104,7 +104,7 @@ function createBundle(modules, entryId) {
     + `var record=modules[id],module={exports:{}};cache[id]=module;`
     + `var deps=record[1];`
     + `function localRequire(name){return load(deps[name])}`
-    + `record[0](module,module.exports,localRequire,'','');`
+    + `record[0](module,module.exports,localRequire,'','',process);`
     + `return module.exports}`
     + `load(entry);`
     + `})({${moduleCode.join(',')}},${entryId});\n`;
