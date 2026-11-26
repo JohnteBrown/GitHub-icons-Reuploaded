@@ -1,6 +1,6 @@
 # GitHub VS Code Icons Reuploaded & Revitalized.
 
-A Manifest V3 browser extension that displays VS Code-style file and folder icons on supported code-hosting websites.
+A Manifest V3 browser extension that replaces githubs default icons with some snazzy vscode file and folder icons, with support for other sites ofc.
 
 ## Development
 
@@ -13,15 +13,6 @@ Install dependencies:
 
 ```sh
 npm install
-```
-
-Available tasks:
-
-```sh
-npm run lint
-npm run lint:fix
-npm run build
-npm run verify
 ```
 
 Jake manages the workspace tasks. The build is generated in `dist/` using SWC/SPack.
