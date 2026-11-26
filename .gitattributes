@@ -1,0 +1,2 @@
+conf/manifests/*.awk linguist-detectable=true
+conf/manifests/*.jsonnet linguist-detectable=true
