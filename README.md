@@ -14,8 +14,6 @@ Install dependencies:
 npm install
 ```
 
-The outputs are independent unpacked extensions in `dist/Chromium/`, `dist/Edge/`, and `dist/Firefox/`. The build retains the existing SWC compilation and module-linking pipeline. Browser manifests are maintained as `.jsonnet` files, reusable Jsonnet libraries as `.libsonnet`, and the target AWK programs as `.awk` files in `conf/manifests/`.
-
 The Firefox add-on ID defaults to `github-icons@example.org`. Override it before building if you have a different ID for signing:
 
 ```powershell
